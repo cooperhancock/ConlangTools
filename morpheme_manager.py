@@ -19,13 +19,21 @@ while True:
             exit()
         continue
 
-COMMANDS = ['quit','list','find','add', 'remove', 'print', 'clear']
+COMMANDS = ['quit','list','find','add', 'remove', 'print', 'clear', 'similar']
 
 # clean up list
 for i in range(len(word_list)):
     word_list[i] = word_list[i].removesuffix('\n')
 while '' in word_list:
     word_list.remove('')
+
+# returns similar morphemes
+def similar(word: str, words: list) -> list:
+    similar_words = []
+    for w in words:
+        if word in w:
+            similar_words.append(w)
+    return similar_words
 
 command = ''
 while not command == 'quit':
@@ -53,6 +61,15 @@ while not command == 'quit':
                 x = input("'" + usr_in[1] + "' is already in list, add anyway? (y/n): ")
                 if not x == 'y':
                     continue
+            similar_morphemes = similar(usr_in[1], word_list)
+            if len(similar_morphemes) > 0:
+                print("these similar morphemes already exist: ")
+                for m in similar_morphemes:
+                    print(m, end=' ')
+                print()
+                x = input("add '" + usr_in[1] + "' to list anyway? (y/n): ")
+                if not x == 'y':
+                    continue
             word_list.append(usr_in[1])
             print("added '" + usr_in[1] + "'")
         else:
@@ -72,6 +89,15 @@ while not command == 'quit':
         x = input('are you sure you want to clear the list? (y/n): ')
         if x == 'y':
             word_list.clear()
+    elif command == 'similar':
+        if len(usr_in) == 2:
+            similar_morphemes = similar(usr_in[1], word_list)
+            print("these morphemes are similar: ")
+            for m in similar_morphemes:
+                print(m, end=' ')
+            print()
+        else:
+            print('error: remove takes 1 argument')
 
 with open(LANGUAGE_FILE, 'w') as file:
     for word in word_list:
