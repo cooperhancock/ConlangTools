@@ -1,10 +1,13 @@
-word_list = []
+word_list = {}
+input_list = []
 
 while True:
     LANGUAGE_FILE = input("enter language file name: ")
+    if not '.txt' in LANGUAGE_FILE:
+        LANGUAGE_FILE += '.txt'
     try:
         with open(LANGUAGE_FILE, 'r') as file:
-            word_list = file.readlines()
+            input_list = file.readlines()
         break
     except OSError:
         x = input("cannot open file, create new file? (y/n): ")
@@ -19,21 +22,27 @@ while True:
             exit()
         continue
 
-COMMANDS = ['quit','list','find','add', 'remove', 'print', 'clear', 'similar']
-
 # clean up list
-for i in range(len(word_list)):
-    word_list[i] = word_list[i].removesuffix('\n')
-while '' in word_list:
-    word_list.remove('')
+for i in range(len(input_list)):
+    input_list[i] = input_list[i].replace('\n', '')
+
+# map input to dictionary
+for i in range(len(input_list)):
+    split = input_list[i].find(' ')
+    if split > 1:
+        word_list[input_list[i][:split]] = input_list[i][split+1:]
+    else:
+        word_list[input_list[i]] = ''
 
 # returns similar morphemes
-def similar(word: str, words: list) -> list:
+def similar(word: str, words: dict) -> list:
     similar_words = []
     for w in words:
-        if word in w:
+        if word in str(w):
             similar_words.append(w)
     return similar_words
+
+COMMANDS = ['quit','list','find','add', 'remove', 'print', 'clear', 'similar', 'define', 'show']
 
 command = ''
 while not command == 'quit':
@@ -45,7 +54,7 @@ while not command == 'quit':
     elif command == 'list':
         print('\nMorpheme List:\n')
         for word in word_list:
-            print(word)
+            print(str(word) + ': ' + str(word_list[word])) if len(usr_in) == 2 and usr_in[1] == '-v' else print(word) 
         print()
     elif command == 'find':
         if len(usr_in) == 2:
@@ -58,9 +67,8 @@ while not command == 'quit':
     elif command == 'add':
         if len(usr_in) == 2:
             if usr_in[1] in word_list:
-                x = input("'" + usr_in[1] + "' is already in list, add anyway? (y/n): ")
-                if not x == 'y':
-                    continue
+                x = input("error: '" + usr_in[1] + "' is already in list")
+                continue
             similar_morphemes = similar(usr_in[1], word_list)
             if len(similar_morphemes) > 0:
                 print("these similar morphemes already exist: ")
@@ -70,14 +78,14 @@ while not command == 'quit':
                 x = input("add '" + usr_in[1] + "' to list anyway? (y/n): ")
                 if not x == 'y':
                     continue
-            word_list.append(usr_in[1])
+            word_list[usr_in[1]] = ''
             print("added '" + usr_in[1] + "'")
         else:
             print('error: add takes 1 argument')
     elif command == 'remove':
         if len(usr_in) == 2:
             if usr_in[1] in word_list:
-                word_list.remove(usr_in[1])
+                word_list.pop(usr_in[1])
                 print("removed '" + usr_in[1] + "'")
             else:
                 print("error: '" + usr_in[1] + "' not in list")
@@ -97,8 +105,28 @@ while not command == 'quit':
                 print(m, end=' ')
             print()
         else:
-            print('error: remove takes 1 argument')
+            print('error: similar takes 1 argument')
+    elif command == 'define':
+        if len(usr_in) > 2:
+            if not usr_in[1] in word_list:
+                x = input("error: '" + usr_in[1] + "' is not in list")
+                continue
+            definition = ''
+            for w in usr_in[2:]:
+                definition += w + ' '
+            word_list[usr_in[1]] = definition
+            print(usr_in[1] + ': ' + str(word_list[usr_in[1]]))
+        else:
+            print('error: define takes 2 arguments')
+    elif command == 'show':
+        if len(usr_in) == 2:
+            if not usr_in[1] in word_list:
+                x = input("error: '" + usr_in[1] + "' is not in list")
+                continue
+            print(usr_in[1] + ': ' + str(word_list[usr_in[1]]))
+        else:
+            print('error: show takes 1 argument')
 
 with open(LANGUAGE_FILE, 'w') as file:
     for word in word_list:
-        file.write(word + '\n')
+        file.write(word + ' ' + word_list[word] + '\n')
